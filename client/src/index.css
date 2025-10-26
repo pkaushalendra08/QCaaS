@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+@theme {
+  /* Quantum Blue (Main Brand) - mapped as "primary" */
+  --color-primary-*: initial;
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+  
+  /* Off-Black (Text) - mapped as "charcoal" */
+  --color-charcoal-*: initial;
+  --color-charcoal-50: #f9fafb;
+  --color-charcoal-100: #f3f4f6;
+  --color-charcoal-200: #e5e7eb;
+  --color-charcoal-300: #d1d5db;
+  --color-charcoal-400: #9ca3af;
+  --color-charcoal-500: #6b7280;
+  --color-charcoal-600: #4b5563;
+  --color-charcoal-700: #374151;
+  --color-charcoal-800: #1f2937;
+  --color-charcoal-900: #111827;
+  
+  /* Deep Violet (Secondary) - mapped as "secondary" */
+  --color-secondary-*: initial;
+  --color-secondary-50: #faf5ff;
+  --color-secondary-100: #f3e8ff;
+  --color-secondary-200: #e9d5ff;
+  --color-secondary-300: #d8b4fe;
+  --color-secondary-400: #c084fc;
+  --color-secondary-500: #a855f7;
+  --color-secondary-600: #9333ea;
+  --color-secondary-700: #7e22ce;
+  --color-secondary-800: #6b21a8;
+  --color-secondary-900: #581c87;
+  
+  /* Bright Aqua (Accent) - mapped as "accent" */
+  --color-accent-*: initial;
+  --color-accent-50: #f0fdfa;
+  --color-accent-100: #ccfbf1;
+  --color-accent-200: #99f6e4;
+  --color-accent-300: #5eead4;
+  --color-accent-400: #2dd4bf;
+  --color-accent-500: #14b8a6;
+  --color-accent-600: #0d9488;
+  --color-accent-700: #0f766e;
+  --color-accent-800: #115e59;
+  --color-accent-900: #134e4a;
+  
+  /* Parchment (Backgrounds) */
+  --color-parchment-*: initial;
+  --color-parchment-50: #fdfcfa;
+  --color-parchment-100: #f8f7f4;
+  --color-parchment-200: #f5f3ee;
+  --color-parchment-300: #f0ede6;
+  --color-parchment-400: #e8e4da;
+  --color-parchment-500: #ddd8cb;
+  --color-parchment-600: #c5bfb0;
+  --color-parchment-700: #a39b8a;
+  --color-parchment-800: #827a6b;
+  --color-parchment-900: #686154;
+}
+
+@layer base {
+  * {
+    @apply m-0 p-0 box-border;
+  }
+
+  body {
+    @apply bg-white text-charcoal-900;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  .animate-fadeIn {
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  .animate-bounce-horizontal {
+    animation: bounce-horizontal 1s infinite;
+  }
+
+  .animate-blob {
+    animation: blob 7s infinite;
+  }
+
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+}
+
+@keyframes blob {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce-horizontal {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(25%);
+  }
+}
