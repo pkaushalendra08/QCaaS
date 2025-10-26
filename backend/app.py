@@ -1,4 +1,7 @@
-"""Handles HTTP requests and routing only"""
+"""
+QCaaS Backend - Flask API Server
+Handles HTTP requests and routing
+"""
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -20,6 +23,7 @@ CORS(app, resources={
 
 # Valid dataset names
 VALID_DATASETS = ['iris', 'stroke', 'water_potability', 'heart', 'diabetes']
+
 
 @app.route('/', methods=['GET'])
 def home():
@@ -58,10 +62,21 @@ def run_comparison():
     
     Response:
         {
-            "svm_metrics": {...},
-            "vqc_metrics": {...},
+            "svm_metrics": {
+                "accuracy": 0.97,
+                "precision": 0.97,
+                "recall": 0.97,
+                "f1_score": 0.97
+            },
+            "vqc_metrics": {
+                "accuracy": 0.94,
+                "precision": 0.94,
+                "recall": 0.94,
+                "f1_score": 0.94
+            },
             "winner": "SVM" | "VQC" | "Tie",
-            "execution_time_seconds": 45.3
+            "execution_time_seconds": 45.3,
+            "dataset_name": "iris"
         }
     """
     
@@ -93,6 +108,7 @@ def run_comparison():
         if dataset_name not in VALID_DATASETS:
             return jsonify({
                 'error': f'Invalid dataset_name: "{dataset_name}"',
+                'message': 'Please select a valid dataset',
                 'valid_datasets': VALID_DATASETS
             }), 400
         
@@ -123,6 +139,8 @@ def run_comparison():
         print(f"\n{'='*70}")
         print(f"[SUCCESS] Comparison completed in {execution_time_seconds}s")
         print(f"[WINNER] {winner}")
+        print(f"[SVM] Accuracy: {svm_accuracy:.4f}")
+        print(f"[VQC] Accuracy: {vqc_accuracy:.4f}")
         print(f"{'='*70}\n")
         
         # Construct success response
@@ -140,7 +158,7 @@ def run_comparison():
         print(f"[ERROR] File not found: {str(fnf_error)}")
         return jsonify({
             'error': f'Dataset file not found: {str(fnf_error)}',
-            'message': 'Please ensure the data files are in the /data directory'
+            'message': 'Please ensure the CSV file exists in the /data directory'
         }), 404
     
     except ValueError as val_error:
@@ -166,7 +184,8 @@ if __name__ == '__main__':
     debug_mode = os.getenv('FLASK_ENV', 'production') == 'development'
     
     print(f"\n{'='*70}")
-    print(f"QCaaS Backend Server")
+    print(f"🚀 QCaaS Backend Server Starting...")
+    print(f"{'='*70}")
     print(f"Port: {port}")
     print(f"Debug Mode: {debug_mode}")
     print(f"Valid Datasets: {', '.join(VALID_DATASETS)}")

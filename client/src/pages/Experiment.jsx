@@ -20,43 +20,41 @@ const Experiment = () => {
     { id: 4, label: 'Finalizing Results' }
   ];
 
-  // Progress simulation effect
-  useEffect(() => {
-    if (!isLoading) return;
-
-    const stepInterval = setInterval(() => {
-      setCurrentStep((prev) => {
-        if (prev < loadingSteps.length) {
-          return prev + 1;
-        }
-        return prev;
-      });
-    }, 5000); // Update every 5 seconds
-
-    // Cleanup interval on unmount or when loading stops
-    return () => clearInterval(stepInterval);
-  }, [isLoading, loadingSteps.length]);
-
-  const handleRun = async () => {
+ const handleRun = async () => {
     try {
       setIsLoading(true);
       setError(null);
+
+      // Step 0: "Data Loaded & Prepared" is active
       setCurrentStep(0);
+    
+      await new Promise(r => setTimeout(r, 3000)); 
 
-      // Call API service
-      const data = await runExperiment(dataset);
+      // Step 1: "Training Classical SVM" is active
+      setCurrentStep(1);
+      await new Promise(r => setTimeout(r, 5000)); 
 
-      // Complete all steps before navigating
-      setCurrentStep(loadingSteps.length);
+      // Step 2: "Training Quantum VQC" is active
+      setCurrentStep(2);
+      const data = await runExperiment(dataset); 
 
-      // Small delay to show completion
-      setTimeout(() => {
-        navigate('/result', { state: { results: data } });
-      }, 500);
+      // Step 3: "Finalizing Results" is active
+      setCurrentStep(3);
+      await new Promise(r => setTimeout(r, 1000)); // Fake 0.5s delay
+
+      // Step 4: All steps are complete
+      setCurrentStep(4);
+      await new Promise(r => setTimeout(r, 500)); // Show completion
+
+      // Navigate to the results page
+      navigate('/result', { state: { results: data } });
 
     } catch (err) {
       console.error('Experiment error:', err);
       setError(err.message || 'The analysis failed. Please try again.');
+      // On error, stop loading and reset steps
+      setIsLoading(false);
+      setCurrentStep(0);
 
     } finally {
       setIsLoading(false);

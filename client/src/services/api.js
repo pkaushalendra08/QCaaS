@@ -9,43 +9,35 @@ export const runExperiment = async (dataset) => {
   const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
 
   try {
-    console.log('🚀 Sending request to backend:', {
-      url: `${API_URL}/run_comparison`,
-      dataset_name: dataset
-    });
+    console.log('🚀 Sending to backend:', { dataset_name: dataset });
 
     const response = await fetch(`${API_URL}/run_comparison`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ dataset_name: dataset }), // ✅ Ensure correct key
+      body: JSON.stringify({ dataset_name: dataset }), // ✅ Sends user's choice
       signal: controller.signal,
     });
 
     clearTimeout(timeoutId);
 
-    console.log('📡 Response status:', response.status);
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('❌ Backend error:', errorData);
-      throw new Error(errorData.error || errorData.message || 'The analysis failed. Please try again.');
+      throw new Error(errorData.error || 'Analysis failed');
     }
 
-    const data = await response.json();
-    console.log('✅ Success:', data);
-    return data;
+    return await response.json();
 
   } catch (error) {
     clearTimeout(timeoutId);
-    console.error('💥 Fetch error:', error);
-
+    
     if (error.name === 'AbortError') {
-      throw new Error('Request timeout. The analysis is taking too long. Please try again.');
+      throw new Error('Request timeout. Please try again.');
     } else if (error.message.includes('Failed to fetch')) {
-      throw new Error('Unable to connect to server. Please check your connection.');
+      throw new Error('Unable to connect to server.');
     }
     throw error;
   }
 };
+
