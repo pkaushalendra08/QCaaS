@@ -5,5 +5,5 @@ numpy==1.26.4
 pandas==2.2.2
 scikit-learn==1.5.0
 qiskit==1.1.0
-qiskit-machine-learning==0.8.4
+qiskit-machine-learning==0.7.2
 python-dotenv==1.0.1
