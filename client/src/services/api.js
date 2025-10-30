@@ -1,5 +1,5 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const API_TIMEOUT = import.meta.env.VITE_API_TIMEOUT || 120000;
+const API_TIMEOUT = import.meta.env.VITE_API_TIMEOUT || 300000;
 
 /**
  * Run experiment comparison
@@ -9,7 +9,7 @@ export const runExperiment = async (dataset) => {
   const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
 
   try {
-    console.log('🚀 Sending to backend:', { dataset_name: dataset });
+    console.log(' Sending to backend:', { dataset_name: dataset });
 
     const response = await fetch(`${API_URL}/run_comparison`, {
       method: 'POST',

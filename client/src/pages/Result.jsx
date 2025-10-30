@@ -1,9 +1,25 @@
 import React from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { FaTrophy, FaHome, FaRedo } from 'react-icons/fa';
-import { RiFlaskLine } from 'react-icons/ri';
+import { FaTrophy, FaHome, FaRedo, FaChartBar, FaRobot, FaMicrochip } from 'react-icons/fa';
 import { SiQuantconnect } from 'react-icons/si';
 import { BsCpu } from 'react-icons/bs';
+import {
+  BarChart,
+  Bar,
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Cell
+} from 'recharts';
+import logo from '../assets/QCaaS-logo.png'
 
 const Result = () => {
   const location = useLocation();
@@ -14,14 +30,14 @@ const Result = () => {
   if (!results) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-parchment-100 to-parchment-200 flex items-center justify-center px-4">
-        <div className="text-center">
+        <div className="text-center bg-white p-8 rounded-2xl shadow-xl">
           <h1 className="text-3xl font-bold text-charcoal-900 mb-4">No Results Found</h1>
           <p className="text-charcoal-600 mb-6">Please run an experiment first.</p>
           <Link
             to="/experiment"
             className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-all"
           >
-            <RiFlaskLine />
+            <FaChartBar />
             Run Experiment
           </Link>
         </div>
@@ -31,139 +47,372 @@ const Result = () => {
 
   const { svm_metrics, vqc_metrics, winner, execution_time_seconds, dataset_name } = results;
 
-  // Determine winner styling
-  const getWinnerStyle = (model) => {
-    if (winner === model) {
-      return 'border-4 border-primary-500 bg-primary-50';
+  // Prepare data for charts
+  const comparisonData = [
+    {
+      metric: 'Accuracy',
+      SVM: (svm_metrics.accuracy * 100).toFixed(2),
+      VQC: (vqc_metrics.accuracy * 100).toFixed(2)
+    },
+    {
+      metric: 'Precision',
+      SVM: (svm_metrics.precision * 100).toFixed(2),
+      VQC: (vqc_metrics.precision * 100).toFixed(2)
+    },
+    {
+      metric: 'Recall',
+      SVM: (svm_metrics.recall * 100).toFixed(2),
+      VQC: (vqc_metrics.recall * 100).toFixed(2)
+    },
+    {
+      metric: 'F1 Score',
+      SVM: (svm_metrics.f1_score * 100).toFixed(2),
+      VQC: (vqc_metrics.f1_score * 100).toFixed(2)
     }
-    return 'border-2 border-parchment-300';
-  };
+  ];
+
+  // Radar chart data
+  const radarData = [
+    {
+      metric: 'Accuracy',
+      SVM: svm_metrics.accuracy * 100,
+      VQC: vqc_metrics.accuracy * 100,
+      fullMark: 100
+    },
+    {
+      metric: 'Precision',
+      SVM: svm_metrics.precision * 100,
+      VQC: vqc_metrics.precision * 100,
+      fullMark: 100
+    },
+    {
+      metric: 'Recall',
+      SVM: svm_metrics.recall * 100,
+      VQC: vqc_metrics.recall * 100,
+      fullMark: 100
+    },
+    {
+      metric: 'F1',
+      SVM: svm_metrics.f1_score * 100,
+      VQC: vqc_metrics.f1_score * 100,
+      fullMark: 100
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-parchment-100 to-parchment-200 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
-        
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center mb-4">
-            <FaTrophy className="text-5xl text-primary-500" />
+    <div className="min-h-screen bg-gradient-to-br from-parchment-100 to-parchment-200 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+
+        {/* Header with Actions */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-4xl sm:text-5xl font-bold text-charcoal-900 mb-2">
+              Experiment Results
+            </h1>
+            <p className="text-lg text-charcoal-600">
+              Dataset: <span className="font-semibold text-primary-600 capitalize">{dataset_name}</span>
+            </p>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-charcoal-900 mb-3">
-            Experiment Results
-          </h1>
-          <p className="text-lg text-charcoal-600">
-            Dataset: <span className="font-semibold text-primary-600">{dataset_name}</span>
-          </p>
-          <p className="text-sm text-charcoal-500 mt-2">
-            ⏱️ Execution Time: {execution_time_seconds}s
-          </p>
+          <div className="flex gap-3">
+            <Link
+              to="/"
+              className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-parchment-50 text-charcoal-700 rounded-lg font-semibold border-2 border-charcoal-200 transition-all shadow-md hover:shadow-lg"
+            >
+              <FaHome />
+              <span className="hidden sm:inline">Home</span>
+            </Link>
+            <Link
+              to="/experiment"
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+            >
+              <FaRedo />
+              <span className="hidden sm:inline">New Experiment</span>
+            </Link>
+          </div>
         </div>
 
         {/* Winner Announcement */}
-        <div className="mb-12 text-center">
-          <div className="inline-block px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-2xl shadow-xl">
-            <p className="text-sm font-semibold mb-1">🏆 Winner</p>
-            <p className="text-3xl font-bold">
-              {winner === 'SVM' ? 'Classical SVM' : winner === 'VQC' ? 'Quantum VQC' : 'It\'s a Tie!'}
+        <div className="mb-8 text-center">
+          <div className="inline-block px-8 py-6 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-2xl shadow-2xl">
+            <div className="flex items-center justify-center gap-4 mb-2">
+              <FaTrophy className="text-4xl" />
+              <p className="text-lg font-semibold">Winner</p>
+            </div>
+            <p className="text-4xl font-bold mb-2">
+              {winner === 'SVM' ? 'Classical SVM' : winner === 'VQC' ? 'Quantum VQC' : "It's a Tie!"}
+            </p>
+            <p className="text-sm opacity-90">
+              Execution Time: {execution_time_seconds}s
             </p>
           </div>
         </div>
 
-        {/* Comparison Cards */}
-        <div className="grid md:grid-cols-2 gap-8 mb-12">
-          
-          {/* Classical SVM Card */}
-          <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden ${getWinnerStyle('SVM')}`}>
-            <div className="bg-gradient-to-r from-secondary-100 to-secondary-50 px-6 py-6 border-b-2 border-parchment-200">
-              <div className="flex items-center gap-4">
-                <div className="p-4 bg-white rounded-xl">
-                  <BsCpu className="text-4xl text-secondary-600" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-charcoal-900">Classical SVM</h2>
-                  <p className="text-sm text-charcoal-600">Support Vector Machine</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="p-8 space-y-6">
-              <MetricRow label="Accuracy" value={svm_metrics.accuracy} />
-              <MetricRow label="Precision" value={svm_metrics.precision} />
-              <MetricRow label="Recall" value={svm_metrics.recall} />
-              <MetricRow label="F1 Score" value={svm_metrics.f1_score} />
-            </div>
+        {/* Interactive Charts Section */}
+        <div className="grid lg:grid-cols-2 gap-8 mb-8">
+
+          {/* Bar Chart Comparison */}
+          <div className="bg-white rounded-2xl shadow-xl border-2 border-parchment-200 p-6">
+            <h2 className="text-2xl font-bold text-charcoal-900 mb-4 flex items-center gap-2">
+              <FaChartBar className="text-primary-600" />
+              Performance Comparison
+            </h2>
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart data={comparisonData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="metric" stroke="#4b5563" />
+                <YAxis stroke="#4b5563" domain={[0, 100]} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    border: '2px solid #d1d5db',
+                    borderRadius: '8px'
+                  }}
+                />
+                <Legend />
+                <Bar dataKey="SVM" fill="#10b981" name="Classical SVM" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="VQC" fill="#d97706" name="Quantum VQC" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
 
-          {/* Quantum VQC Card */}
-          <div className={`bg-white rounded-3xl shadow-2xl overflow-hidden ${getWinnerStyle('VQC')}`}>
-            <div className="bg-gradient-to-r from-accent-100 to-accent-50 px-6 py-6 border-b-2 border-parchment-200">
-              <div className="flex items-center gap-4">
-                <div className="p-4 bg-white rounded-xl">
-                  <SiQuantconnect className="text-4xl text-primary-600" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-charcoal-900">Quantum VQC</h2>
-                  <p className="text-sm text-charcoal-600">Variational Quantum Classifier</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="p-8 space-y-6">
-              <MetricRow label="Accuracy" value={vqc_metrics.accuracy} />
-              <MetricRow label="Precision" value={vqc_metrics.precision} />
-              <MetricRow label="Recall" value={vqc_metrics.recall} />
-              <MetricRow label="F1 Score" value={vqc_metrics.f1_score} />
-            </div>
-          </div>
-
-        </div>
-
-        {/* Comparison Chart */}
-        <div className="bg-white rounded-3xl shadow-2xl p-8 mb-8">
-          <h3 className="text-2xl font-bold text-charcoal-900 mb-6 text-center">
-            Performance Comparison
-          </h3>
-          <div className="space-y-6">
-            <ComparisonBar 
-              label="Accuracy" 
-              svm={svm_metrics.accuracy} 
-              vqc={vqc_metrics.accuracy} 
-            />
-            <ComparisonBar 
-              label="Precision" 
-              svm={svm_metrics.precision} 
-              vqc={vqc_metrics.precision} 
-            />
-            <ComparisonBar 
-              label="Recall" 
-              svm={svm_metrics.recall} 
-              vqc={vqc_metrics.recall} 
-            />
-            <ComparisonBar 
-              label="F1 Score" 
-              svm={svm_metrics.f1_score} 
-              vqc={vqc_metrics.f1_score} 
-            />
+          {/* Radar Chart */}
+          <div className="bg-white rounded-2xl shadow-xl border-2 border-parchment-200 p-6">
+            <h2 className="text-2xl font-bold text-charcoal-900 mb-4 flex items-center gap-2">
+              <SiQuantconnect className="text-primary-600" />
+              Performance Radar
+            </h2>
+            <ResponsiveContainer width="100%" height={350}>
+              <RadarChart data={radarData}>
+                <PolarGrid stroke="#e5e7eb" />
+                <PolarAngleAxis dataKey="metric" stroke="#4b5563" />
+                <PolarRadiusAxis angle={90} domain={[0, 100]} stroke="#4b5563" />
+                <Radar
+                  name="SVM"
+                  dataKey="SVM"
+                  stroke="#10b981"
+                  fill="#10b981"
+                  fillOpacity={0.6}
+                />
+                <Radar
+                  name="VQC"
+                  dataKey="VQC"
+                  stroke="#d97706"
+                  fill="#d97706"
+                  fillOpacity={0.6}
+                />
+                <Legend />
+              </RadarChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            to="/experiment"
-            className="flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl font-bold text-lg hover:from-primary-700 hover:to-primary-600 transition-all shadow-lg hover:shadow-xl"
-          >
-            <FaRedo />
-            Run Another Experiment
-          </Link>
-          
-          <Link
-            to="/"
-            className="flex items-center justify-center gap-2 px-8 py-4 bg-white text-primary-600 border-2 border-primary-600 rounded-xl font-bold text-lg hover:bg-primary-50 transition-all"
-          >
-            <FaHome />
-            Back to Home
-          </Link>
+        {/* Enhanced Academic Metrics Cards */}
+        <div className="grid md:grid-cols-2 gap-8 mb-8">
+
+          {/* Classical SVM Card - Academic Design */}
+          <div className={`relative rounded-2xl shadow-2xl border-2 transition-all duration-300 hover:scale-[1.02] ${winner === 'SVM' ? 'border-secondary-500 shadow-secondary-500/50' : 'border-charcoal-200'
+            }`}>
+            {/* Winner Badge */}
+            {winner === 'SVM' && (
+              <div className="absolute -top-4 -right-4 z-10">
+                <div className="bg-gradient-to-br from-secondary-600 to-secondary-500 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 font-bold">
+                  <FaTrophy className="text-lg" />
+                  <span>Winner</span>
+                </div>
+              </div>
+            )}
+
+            {/* Card Header */}
+            <div className="bg-gradient-to-br from-secondary-600 via-secondary-500 to-secondary-400 text-white px-8 py-6 rounded-t-2xl">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-3 bg-white/20 backdrop-blur-sm rounded-lg">
+                      <BsCpu className="text-3xl" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold">Classical ML</h2>
+                      <p className="text-sm opacity-90">Support Vector Machine</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 p-3 bg-white/10 backdrop-blur-sm rounded-lg inline-block">
+                    <p className="text-xs font-semibold opacity-90">OVERALL ACCURACY</p>
+                    <p className="text-4xl font-bold mt-1">{(svm_metrics.accuracy * 100).toFixed(2)}%</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card Body - Metrics Grid */}
+            <div className="bg-white p-8">
+              <h3 className="text-lg font-bold text-charcoal-900 mb-6 flex items-center gap-2">
+                <FaChartBar className="text-secondary-600" />
+                Performance Metrics
+              </h3>
+
+              <div className="space-y-6">
+                <AcademicMetricRow
+                  label="Accuracy"
+                  value={svm_metrics.accuracy}
+                  color="secondary"
+                  icon="📊"
+                  description="Correctly classified instances"
+                />
+                <AcademicMetricRow
+                  label="Precision"
+                  value={svm_metrics.precision}
+                  color="secondary"
+                  icon="🎯"
+                  description="True positives / Predicted positives"
+                />
+                <AcademicMetricRow
+                  label="Recall"
+                  value={svm_metrics.recall}
+                  color="secondary"
+                  icon="🔍"
+                  description="True positives / Actual positives"
+                />
+                <AcademicMetricRow
+                  label="F1 Score"
+                  value={svm_metrics.f1_score}
+                  color="secondary"
+                  icon="⚖️"
+                  description="Harmonic mean of precision & recall"
+                />
+              </div>
+
+              {/* Technical Details */}
+              <div className="mt-8 pt-6 border-t-2 border-parchment-200">
+                <h4 className="text-sm font-bold text-charcoal-700 mb-3">Algorithm Details</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <DetailBadge label="Kernel" value="RBF" />
+                  <DetailBadge label="Type" value="Supervised" />
+                  <DetailBadge label="Paradigm" value="Classical" />
+                  <DetailBadge label="Complexity" value="O(n²)" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quantum VQC Card - Academic Design */}
+          <div className={`relative rounded-2xl shadow-2xl border-2 transition-all duration-300 hover:scale-[1.02] ${winner === 'VQC' ? 'border-primary-500 shadow-primary-500/50' : 'border-charcoal-200'
+            }`}>
+            {/* Winner Badge */}
+            {winner === 'VQC' && (
+              <div className="absolute -top-4 -right-4 z-10">
+                <div className="bg-gradient-to-br from-primary-600 to-primary-500 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 font-bold">
+                  <FaTrophy className="text-lg" />
+                  <span>Winner</span>
+                </div>
+              </div>
+            )}
+
+            {/* Card Header */}
+            <div className="bg-gradient-to-br from-primary-600 via-primary-500 to-primary-400 text-white px-8 py-6 rounded-t-2xl">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-3 bg-white/20 backdrop-blur-sm rounded-lg">
+                      <img
+                        src={logo}
+                        alt="QCaaS Logo"
+                        className="h-8 w-auto sm:h-10 md:h-12 object-contain"
+                      />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold">Quantum ML</h2>
+                      <p className="text-sm opacity-90">Variational Quantum Classifier</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 p-3 bg-white/10 backdrop-blur-sm rounded-lg inline-block">
+                    <p className="text-xs font-semibold opacity-90">OVERALL ACCURACY</p>
+                    <p className="text-4xl font-bold mt-1">{(vqc_metrics.accuracy * 100).toFixed(2)}%</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card Body - Metrics Grid */}
+            <div className="bg-white p-8">
+              <h3 className="text-lg font-bold text-charcoal-900 mb-6 flex items-center gap-2">
+                <SiQuantconnect className="text-primary-600" />
+                Performance Metrics
+              </h3>
+
+              <div className="space-y-6">
+                <AcademicMetricRow
+                  label="Accuracy"
+                  value={vqc_metrics.accuracy}
+                  color="primary"
+                  icon="📊"
+                  description="Correctly classified instances"
+                />
+                <AcademicMetricRow
+                  label="Precision"
+                  value={vqc_metrics.precision}
+                  color="primary"
+                  icon="🎯"
+                  description="True positives / Predicted positives"
+                />
+                <AcademicMetricRow
+                  label="Recall"
+                  value={vqc_metrics.recall}
+                  color="primary"
+                  icon="🔍"
+                  description="True positives / Actual positives"
+                />
+                <AcademicMetricRow
+                  label="F1 Score"
+                  value={vqc_metrics.f1_score}
+                  color="primary"
+                  icon="⚖️"
+                  description="Harmonic mean of precision & recall"
+                />
+              </div>
+
+              {/* Technical Details */}
+              <div className="mt-8 pt-6 border-t-2 border-parchment-200">
+                <h4 className="text-sm font-bold text-charcoal-700 mb-3">Algorithm Details</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <DetailBadge label="Qubits" value="2" />
+                  <DetailBadge label="Type" value="Supervised" />
+                  <DetailBadge label="Paradigm" value="Quantum" />
+                  <DetailBadge label="Circuit Depth" value="O(d)" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Insights Section */}
+        <div className="bg-white rounded-2xl shadow-xl border-2 border-parchment-200 p-8">
+          <h2 className="text-2xl font-bold text-charcoal-900 mb-4 flex items-center gap-2">
+            <FaRobot className="text-primary-600" />
+            Key Insights
+          </h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            <InsightCard
+              icon={<FaMicrochip />}
+              title="Execution Time"
+              value={`${execution_time_seconds}s`}
+              description="Total processing time"
+              color="accent"
+            />
+            <InsightCard
+              icon={<BsCpu />}
+              title="Classical Performance"
+              value={`${(svm_metrics.accuracy * 100).toFixed(1)}%`}
+              description="SVM Accuracy"
+              color="secondary"
+            />
+            <InsightCard
+              icon={<SiQuantconnect />}
+              title="Quantum Performance"
+              value={`${(vqc_metrics.accuracy * 100).toFixed(1)}%`}
+              description="VQC Accuracy"
+              color="primary"
+            />
+          </div>
         </div>
 
       </div>
@@ -171,55 +420,103 @@ const Result = () => {
   );
 };
 
-// Metric Row Component
-const MetricRow = ({ label, value }) => (
-  <div className="flex justify-between items-center">
-    <span className="text-charcoal-700 font-medium">{label}</span>
-    <div className="flex items-center gap-3">
-      <div className="w-32 bg-parchment-200 rounded-full h-3 overflow-hidden">
-        <div 
-          className="h-full bg-gradient-to-r from-primary-500 to-primary-600 rounded-full transition-all duration-500"
-          style={{ width: `${value * 100}%` }}
-        ></div>
-      </div>
-      <span className="text-xl font-bold text-primary-600 w-16 text-right">
-        {(value * 100).toFixed(1)}%
-      </span>
-    </div>
-  </div>
-);
+// Enhanced Academic Metric Row Component
+const AcademicMetricRow = ({ label, value, color, icon, description }) => {
+  const percentage = (value * 100).toFixed(2);
+  const numericValue = parseFloat(percentage);
 
-// Comparison Bar Component
-const ComparisonBar = ({ label, svm, vqc }) => (
-  <div>
-    <p className="text-sm font-semibold text-charcoal-700 mb-2">{label}</p>
-    <div className="flex gap-4 items-center">
-      <div className="flex-1">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs text-charcoal-600 w-16">SVM</span>
-          <div className="flex-1 bg-parchment-200 rounded-full h-6 overflow-hidden">
-            <div 
-              className="h-full bg-secondary-500 rounded-full flex items-center justify-end pr-2 transition-all duration-500"
-              style={{ width: `${svm * 100}%` }}
-            >
-              <span className="text-xs font-bold text-white">{(svm * 100).toFixed(1)}%</span>
-            </div>
+  const colorClasses = {
+    primary: {
+      bg: 'bg-primary-500',
+      text: 'text-primary-700',
+      light: 'bg-primary-50',
+      border: 'border-primary-200'
+    },
+    secondary: {
+      bg: 'bg-secondary-500',
+      text: 'text-secondary-700',
+      light: 'bg-secondary-50',
+      border: 'border-secondary-200'
+    }
+  };
+
+  const getPerformanceRating = (score) => {
+    if (score >= 95) return 'Excellent';
+    if (score >= 85) return 'Good';
+    if (score >= 70) return 'Fair';
+    return 'Poor';
+  };
+
+  return (
+    <div className={`p-4 rounded-xl border-2 ${colorClasses[color].border} ${colorClasses[color].light} transition-all duration-300 hover:shadow-md`}>
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">{icon}</span>
+          <div>
+            <h4 className="text-base font-bold text-charcoal-900">{label}</h4>
+            <p className="text-xs text-charcoal-600">{description}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-charcoal-600 w-16">VQC</span>
-          <div className="flex-1 bg-parchment-200 rounded-full h-6 overflow-hidden">
-            <div 
-              className="h-full bg-primary-500 rounded-full flex items-center justify-end pr-2 transition-all duration-500"
-              style={{ width: `${vqc * 100}%` }}
-            >
-              <span className="text-xs font-bold text-white">{(vqc * 100).toFixed(1)}%</span>
-            </div>
+        <div className="text-right">
+          <p className="text-2xl font-bold text-charcoal-900">{percentage}%</p>
+          <p className={`text-xs font-semibold ${colorClasses[color].text}`}>
+            {getPerformanceRating(numericValue)}
+          </p>
+        </div>
+      </div>
+
+      {/* Animated Progress Bar */}
+      <div className="relative">
+        <div className="w-full bg-charcoal-200 rounded-full h-2.5 overflow-hidden">
+          <div
+            className={`h-full ${colorClasses[color].bg} transition-all duration-1000 ease-out rounded-full relative`}
+            style={{ width: `${percentage}%` }}
+          >
+            {/* Shimmer effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
           </div>
+        </div>
+        {/* Threshold markers */}
+        <div className="flex justify-between mt-1 text-xs text-charcoal-500">
+          <span>0%</span>
+          <span className="opacity-50">|</span>
+          <span className="opacity-50">50%</span>
+          <span className="opacity-50">|</span>
+          <span>100%</span>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
+
+// Detail Badge Component
+const DetailBadge = ({ label, value }) => {
+  return (
+    <div className="text-center p-3 bg-parchment-100 rounded-lg border border-parchment-300">
+      <p className="text-xs font-semibold text-charcoal-600 mb-1">{label}</p>
+      <p className="text-sm font-bold text-charcoal-900">{value}</p>
+    </div>
+  );
+};
+
+// Insight Card Component
+const InsightCard = ({ icon, title, value, description, color }) => {
+  const colorClasses = {
+    primary: 'bg-primary-100 text-primary-600',
+    secondary: 'bg-secondary-100 text-secondary-600',
+    accent: 'bg-accent-100 text-accent-600'
+  };
+
+  return (
+    <div className="text-center p-6 bg-parchment-50 rounded-xl border-2 border-parchment-200 transition-all duration-300 hover:shadow-lg hover:scale-105">
+      <div className={`inline-flex p-4 rounded-full ${colorClasses[color]} mb-3 text-3xl`}>
+        {icon}
+      </div>
+      <h3 className="text-sm font-semibold text-charcoal-600 mb-1">{title}</h3>
+      <p className="text-3xl font-bold text-charcoal-900 mb-1">{value}</p>
+      <p className="text-xs text-charcoal-500">{description}</p>
+    </div>
+  );
+};
 
 export default Result;
