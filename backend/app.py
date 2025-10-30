@@ -51,13 +51,23 @@ else:
     logging.info(f"CORS configured for the following origins: {origins_list}")
 
 
-CORS(app, resources={
-    r"/api/*": {
-        "origins": origins_list, 
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
-    }
-})
+
+CORS(app, 
+     origins=origins_list,
+     methods=["GET", "POST", "OPTIONS"],
+     allow_headers=["Content-Type", "Authorization"],
+     supports_credentials=False)
+
+
+@app.after_request
+def after_request(response):
+    origin = request.headers.get('Origin')
+    if origin and (origins_list == "*" or origin in origins_list):
+        response.headers['Access-Control-Allow-Origin'] = origin if origins_list != "*" else "*"
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    return response
+
 
 VALID_DATASETS = ['iris', 'stroke', 'water_potability', 'heart', 'diabetes']
 
