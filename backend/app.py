@@ -5,9 +5,16 @@ QCaaS Backend
 import os
 import logging
 import time
+import sys 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from dotenv import load_dotenv  
+from dotenv import load_dotenv
+
+
+
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(CURRENT_DIR)
+
 
 
 load_dotenv()
@@ -122,7 +129,7 @@ def run_comparison():
         
         svm_metrics, vqc_metrics = run_comparison_pipeline(dataset_name)
         
-      
+        
         end_time = time.time()
         execution_time_seconds = round(end_time - start_time, 2)
         
@@ -187,3 +194,4 @@ if __name__ == '__main__':
     
    
     app.run(debug=debug_mode, host='0.0.0.0', port=port)
+
