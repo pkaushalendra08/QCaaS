@@ -6,6 +6,12 @@ import os
 import logging
 import time
 import sys 
+
+logging.basicConfig(level=logging.INFO)
+logging.info(f"Working directory: {os.getcwd()}")
+logging.info(f"Directory contents: {os.listdir('.')}")
+logging.info(f"Python path: {sys.path}")
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -21,11 +27,13 @@ load_dotenv()
 
 try:
     from ml_logic import run_comparison_pipeline
-except ImportError:
-    
-    logging.critical("Failed to import 'run_comparison_pipeline' from 'ml_logic.py'.")
+    logging.info("✓ Successfully imported ml_logic.run_comparison_pipeline")
+except ImportError as e:
+    logging.critical(f"Failed to import 'run_comparison_pipeline': {e}")
+    logging.critical(f"Current directory: {os.getcwd()}")
+    logging.critical(f"Files in directory: {os.listdir('.')}")
     def run_comparison_pipeline(dataset_name):
-        raise ImportError(f"ml_logic.py not found or corrupted. Cannot process {dataset_name}")
+        raise ImportError(f"ml_logic.py not found. Error: {e}")
 
 
 log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
