@@ -11,11 +11,11 @@ from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import logging 
 
-# Qiskit imports
-from qiskit.primitives import Sampler
+# Qiskit imports (Qiskit 1.x compatible)
+from qiskit.primitives import StatevectorSampler as Sampler
 from qiskit.circuit.library import ZZFeatureMap, RealAmplitudes
 from qiskit_machine_learning.algorithms import VQC
-from qiskit.algorithms.optimizers import COBYLA
+from qiskit_algorithms.optimizers import COBYLA
 
 # ⚡ SPEED OPTIMIZATIONS
 NUM_QUBITS = 2
@@ -77,20 +77,21 @@ def _load_and_prepare_data(dataset_name):
     y = df[config['target']].copy()
     X_df = df.drop(columns=[config['target']])
     
-    X_df.fillna(X_df.median(numeric_only=True), inplace=True)
-    X_df.fillna('Unknown', inplace=True)
+    X_df = X_df.fillna(X_df.median(numeric_only=True))
+    X_df = X_df.fillna('Unknown')
     
     valid_mask = y.notna()
-    y = y[valid_mask]
-    X_df = X_df[valid_mask]
+    y = y[valid_mask].reset_index(drop=True)
+    X_df = X_df[valid_mask].reset_index(drop=True)
     
-    categorical_cols = X_df.select_dtypes(include=['object']).columns
+    categorical_cols = X_df.select_dtypes(include=['object', 'string']).columns
     for col in categorical_cols:
         X_df[col] = LabelEncoder().fit_transform(X_df[col].astype(str))
     
     X = X_df.values.astype(np.float64)
     
-    if y.dtype == object:
+    # pandas 3.x uses StringDtype instead of object — use is_numeric_dtype to be version-safe
+    if not pd.api.types.is_numeric_dtype(y):
         y = LabelEncoder().fit_transform(y.astype(str))
     else:
         y = y.values.astype(np.int64)
