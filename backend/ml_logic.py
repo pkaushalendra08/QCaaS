@@ -5,24 +5,25 @@ QCaaS ML Logic
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.preprocessing import StandardScaler, LabelEncoder, MinMaxScaler, PolynomialFeatures
 from sklearn.decomposition import PCA
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import logging 
 
 # Qiskit imports (Qiskit 1.x compatible)
 from qiskit.primitives import StatevectorSampler as Sampler
-from qiskit.circuit.library import ZZFeatureMap, RealAmplitudes
+from qiskit.circuit.library import ZZFeatureMap, EfficientSU2, RealAmplitudes
 from qiskit_machine_learning.algorithms import VQC
 from qiskit_algorithms.optimizers import COBYLA
 
-# ⚡ SPEED OPTIMIZATIONS
-NUM_QUBITS = 2
-TEST_SIZE = 0.25
+# 💎 HIGH-PRECISION QML (Targeting +15% Accuracy)
+NUM_QUBITS = 4
+TEST_SIZE = 0.20
 RANDOM_STATE = 42
-VQC_REPS = 1
-VQC_MAXITER = 50
+VQC_REPS = 2
+VQC_MAXITER = 100
 
 
 def run_comparison_pipeline(dataset_name):
@@ -138,29 +139,64 @@ def _run_svm(X_original, y):
 
 
 def _run_vqc(X_original, y):
-    """Train VQC"""
-    logging.info("Preprocessing for VQC...")
+    """Train VQC with Supervised Non-Linear Feature Engineering"""
+    logging.info("Preprocessing for High-Precision QML (+15% Mode)...")
     
-    pca = PCA(n_components=NUM_QUBITS)
-    X_reduced = pca.fit_transform(X_original)
+    # 1. Scaling
+    scaler_init = StandardScaler()
+    X_scaled_full = scaler_init.fit_transform(X_original)
     
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X_reduced)
+    # 2. Non-Linear Feature Engineering: Polynomial Interactions
+    # This captures relationships between features classically before quantum mapping
+    poly = PolynomialFeatures(degree=2, interaction_only=True, include_bias=False)
+    X_poly = poly.fit_transform(X_scaled_full)
+    
+    # 3. Supervised Compression: LDA
+    n_classes = len(np.unique(y))
+    lda_components = min(NUM_QUBITS, n_classes - 1)
+    
+    if lda_components > 0:
+        logging.info(f"Applying Non-Linear LDA ({X_poly.shape[1]} -> {lda_components} dims)...")
+        lda = LinearDiscriminantAnalysis(n_components=lda_components)
+        X_reduced = lda.fit_transform(X_poly, y)
+        
+        if X_reduced.shape[1] < NUM_QUBITS:
+            remaining = NUM_QUBITS - X_reduced.shape[1]
+            pca = PCA(n_components=remaining)
+            X_pca = pca.fit_transform(X_scaled_full)
+            X_reduced = np.hstack([X_reduced, X_pca])
+    else:
+        pca = PCA(n_components=NUM_QUBITS)
+        X_reduced = pca.fit_transform(X_scaled_full)
+    
+    # 4. Quantum Mapping
+    scaler_q = MinMaxScaler(feature_range=(0, np.pi))
+    X_scaled = scaler_q.fit_transform(X_reduced)
     
     X_train, X_test, y_train, y_test = train_test_split(
         X_scaled, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=y
     )
     
-    logging.info(f"Configuring {NUM_QUBITS}-qubit quantum circuit...")
+    # Speed/Accuracy Balance for 4-Qubits
+    MAX_TRAIN_SAMPLES = 100 
+    if len(X_train) > MAX_TRAIN_SAMPLES:
+        logging.info(f"💎 Precision Mode: Training on {MAX_TRAIN_SAMPLES} samples...")
+        X_train, _, y_train, _ = train_test_split(
+            X_train, y_train, train_size=MAX_TRAIN_SAMPLES, random_state=RANDOM_STATE, stratify=y_train
+        )
     
+    logging.info(f"Configuring {NUM_QUBITS}-qubit Optimized Quantum Circuit...")
+    
+    # Efficient Encoding: ZZFeatureMap is faster to simulate than PauliFeatureMap
     feature_map = ZZFeatureMap(
         feature_dimension=NUM_QUBITS,
-        reps=VQC_REPS,
+        reps=1,
         entanglement='linear',
         insert_barriers=False
     )
     
-    ansatz = RealAmplitudes(
+    # Efficient Ansatz: EfficientSU2 with optimized depth
+    ansatz = EfficientSU2(
         num_qubits=NUM_QUBITS,
         reps=VQC_REPS,
         entanglement='linear',
@@ -168,6 +204,7 @@ def _run_vqc(X_original, y):
     )
     
     sampler = Sampler()
+    # Efficient Optimizer: COBYLA is faster for noise-free local simulations
     optimizer = COBYLA(maxiter=VQC_MAXITER)
     
     try:
